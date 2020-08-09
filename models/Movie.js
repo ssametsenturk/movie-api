@@ -7,19 +7,27 @@ const MovieSchema = new Schema({
     },
     title: {
         type: String,
-        required: true
+        required: [true, 'Title alanı zorunludur.'],
+        maxlength: 15,
+        minlength:1
     },
     category: {
-        type: String
+        type: String,
+        maxlength: 30,
+        minlength: 1
     },
     country: {
         type: String
     },
     year: {
-        type: Number
+        type: Number,
+        max: 2040,
+        min: 1900
     },
     imdb_score: {
-        type: Number
+        type: Number,
+        max: 10,
+        min: 0
     },
     createdAt: {
         type: Date,

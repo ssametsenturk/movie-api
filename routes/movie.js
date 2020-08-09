@@ -5,7 +5,23 @@ const router = express.Router();
 const Movie = require('../models/Movie');
 
 router.get('/', (req, res) => {
-    const promise = Movie.find({ });
+    const promise = Movie.aggregate([
+        {
+            $lookup: {
+                from: 'directors',
+                localField: 'director_id',
+                foreignField: '_id',
+                as: 'director'
+            }
+        },
+        {
+            $unwind: {
+                path: '$directors',
+                preserveNullAndEmptyArrays: true //yazarı olmayan kitaplarida getirir
+            }
+        }
+    ]);
+
     promise.then((data) => {
         res.json(data);
     }).catch((err) => {
@@ -36,18 +52,35 @@ router.get('/:movie_id', (req, res, next) => {
     });
 });
 
+
 router.delete('/:movie_id', (req, res, next) => {
-    const promise = Movie.findByIdAndRemove(req.params.movie_id, req.body, { new: true });
+    const promise = Movie.findByIdAndRemove(req.params.movie_id, { new: true });
 
     promise.then((movie) => {
         if (!movie){
             next({ message: 'The movie was not found.', code:99 });
         }
+        res.json(movie);
+    }).catch((err) => {
+        res.json(err);
+    });
+});
+
+
+/*
+router.delete('/:movie_id', (req, res, next) => {
+    const promise = Movie.findByIdAndRemove(req.params.movie_id);
+
+    promise.then((movie) => {
+        if (!movie)
+            next({ message: 'The movie was not found.', code: 99 });
+
         res.json({ status: 1 });
     }).catch((err) => {
         res.json(err);
     });
 });
+ */
 
 router.get('/:movie_id', (req, res, next) => {
     const promise = Movie.findById(req.params.movie_id);
@@ -63,9 +96,10 @@ router.get('/:movie_id', (req, res, next) => {
 });
 
 router.post('/', (req, res, next) => {
-    const { title, imdb_score, category, country, year } = req.body;
+    //const { title, imdb_score, category, country, year } = req.body;
     //res.send();
-    //const movie = new Movie(req.body); bu sekildede data alinabilir
+    const movie = new Movie(req.body); //bu sekildede data alinabilir
+    /*
     const movie = new Movie({
         title: title,
         imdb_score: imdb_score,
@@ -73,6 +107,7 @@ router.post('/', (req, res, next) => {
         country: country,
         year: year
     });
+     */
 
     /*
     movie.save((err,data) => {
@@ -101,6 +136,19 @@ router.get('/between/:start_year/:end_year', (req, res) => {
     //const promise = Movie.find().where('year').gt(start_year).lt(end_year);
     promise.then((data) => {
         res.json(data);
+    }).catch((err) => {
+        res.json(err);
+    });
+});
+
+router.put('/:movie_id', (req, res, next) => {
+    const promise = Movie.findByIdAndUpdate(req.params.movie_id, req.body, { new: true });
+
+    promise.then((movie) => {
+        if (!movie){
+            next({ message: 'The movie was not found.', code:99 });
+        }
+        res.json(movie);
     }).catch((err) => {
         res.json(err);
     });
